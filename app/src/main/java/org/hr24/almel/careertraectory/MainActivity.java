@@ -4,16 +4,12 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.CalendarContract;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -28,9 +24,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button registerButton;
     LinearLayout geoLinLay, calendarLinLay;
     ImageSwitcher mImageSwitcher;
-    private int mCurIndex;
+    private int position;
     private int[] mImageIds = { R.drawable.main, R.drawable.first, R.drawable.second, R.drawable.third, R.drawable.fourth};
     private static Handler h;
+    Thread t;
+    Animation slideInLeftAnimation;
+    Animation slideOutRight;
+
 
 
     @Override
@@ -48,9 +48,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         calendarLinLay.setOnClickListener(this);
         mImageSwitcher.setOnClickListener(this);
 
-        Animation slideInLeftAnimation = AnimationUtils.loadAnimation(this,
+        slideInLeftAnimation = AnimationUtils.loadAnimation(this,
                 android.R.anim.slide_in_left);
-        Animation slideOutRight = AnimationUtils.loadAnimation(this,
+        slideOutRight = AnimationUtils.loadAnimation(this,
                 android.R.anim.slide_out_right);
 
         mImageSwitcher.setInAnimation(slideInLeftAnimation);
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ImageView imageView = new ImageView(MainActivity.this);
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
-                FrameLayout.LayoutParams params = new ImageSwitcher.LayoutParams(
+                ImageSwitcher.LayoutParams params = new ImageSwitcher.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
 
                 imageView.setLayoutParams(params);
@@ -72,21 +72,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        mCurIndex = 0;
+        position = 0;
+
+
 
         h = new Handler() {
             public void handleMessage(android.os.Message msg) {
-                if (mCurIndex == mImageIds.length - 1) {
-                    mCurIndex = 0;
-                    mImageSwitcher.setImageResource(mImageIds[mCurIndex]);
+                if (position == mImageIds.length - 1) {
+                    position = 0;
+                    mImageSwitcher.setImageResource(mImageIds[position]);
                 } else {
-                    mImageSwitcher.setImageResource(mImageIds[++mCurIndex]);
+                    mImageSwitcher.setImageResource(mImageIds[++position]);
                 }
             }
         };
 
 
-        Thread t = new Thread(new Runnable() {
+        t = new Thread(new Runnable() {
             public void run() {
                 while (true) {
                     try {
@@ -99,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         t.start();
+
+
     }
 
 
@@ -107,6 +111,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onDestroy();
         h.removeCallbacksAndMessages(null);
     }
+
+
 
     @Override
     public void onClick(View view) {
@@ -151,16 +157,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivity(calendarIntent);
 
                 break;
-            case R.id.imageSwitcher:
-                if (mCurIndex == mImageIds.length - 1) {
-                    mCurIndex = 0;
-                    mImageSwitcher.setImageResource(mImageIds[mCurIndex]);
-                } else {
-                    mImageSwitcher.setImageResource(mImageIds[++mCurIndex]);
-                }
-
-                break;
 
         }
     }
+
+
 }
