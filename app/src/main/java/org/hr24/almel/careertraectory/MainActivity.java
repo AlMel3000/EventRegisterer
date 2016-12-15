@@ -1,35 +1,41 @@
 package org.hr24.almel.careertraectory;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.CalendarContract;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.Button;
-import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-import android.widget.ViewSwitcher;
 
+import org.hr24.almel.careertraectory.utils.DepthPageTransformer;
+import org.hr24.almel.careertraectory.utils.NetworkStatusChecker;
+import org.hr24.almel.careertraectory.utils.SamplePagerAdapter;
+
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
+
+import me.relex.circleindicator.CircleIndicator;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
     Button registerButton;
     LinearLayout geoLinLay, calendarLinLay;
-    ImageSwitcher mImageSwitcher;
+    ViewPager mImageSwitcher;
     private int position;
-    private int[] mImageIds = { R.drawable.main, R.drawable.first, R.drawable.second, R.drawable.third, R.drawable.fourth};
     private static Handler h;
-    Thread t;
-    Animation slideInLeftAnimation;
-    Animation slideOutRight;
+    private static Runnable runnable;
+
+
 
 
 
@@ -40,71 +46,109 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         registerButton = (Button) findViewById(R.id.register_btn);
         geoLinLay = (LinearLayout) findViewById(R.id.geo_ll);
         calendarLinLay = (LinearLayout) findViewById(R.id.calendar_ll);
-        mImageSwitcher = (ImageSwitcher)findViewById(R.id.imageSwitcher);
+        mImageSwitcher = (ViewPager) findViewById(R.id.imageSwitcher);
+
+        mImageSwitcher.setPageTransformer(true, new DepthPageTransformer());
 
 
         registerButton.setOnClickListener(this);
         geoLinLay.setOnClickListener(this);
         calendarLinLay.setOnClickListener(this);
-        mImageSwitcher.setOnClickListener(this);
 
-        slideInLeftAnimation = AnimationUtils.loadAnimation(this,
-                android.R.anim.slide_in_left);
-        slideOutRight = AnimationUtils.loadAnimation(this,
-                android.R.anim.slide_out_right);
+        LayoutInflater inflater = LayoutInflater.from(this);
+        List<View> pages = new ArrayList<View>();
 
-        mImageSwitcher.setInAnimation(slideInLeftAnimation);
-        mImageSwitcher.setOutAnimation(slideOutRight);
+        View page = inflater.inflate(R.layout.page, null);
+        ImageView imageView = (ImageView) page.findViewById(R.id.imageView);
+        imageView.setImageResource(R.drawable.main);
+        pages.add(page);
 
-        mImageSwitcher.setFactory(new ViewSwitcher.ViewFactory() {
+        page = inflater.inflate(R.layout.page, null);
+        imageView = (ImageView) page.findViewById(R.id.imageView);
+        imageView.setImageResource(R.drawable.first);
+        pages.add(page);
+
+        page = inflater.inflate(R.layout.page, null);
+        imageView = (ImageView) page.findViewById(R.id.imageView);
+        imageView.setImageResource(R.drawable.second);
+        pages.add(page);
+
+        page = inflater.inflate(R.layout.page, null);
+        imageView = (ImageView) page.findViewById(R.id.imageView);
+        imageView.setImageResource(R.drawable.third);
+        pages.add(page);
+
+        page = inflater.inflate(R.layout.page, null);
+        imageView = (ImageView) page.findViewById(R.id.imageView);
+        imageView.setImageResource(R.drawable.fourth);
+        pages.add(page);
+
+
+        SamplePagerAdapter pagerAdapter = new SamplePagerAdapter(pages);
+
+        mImageSwitcher.setAdapter(pagerAdapter);
+        mImageSwitcher.setCurrentItem(0);
+
+        CircleIndicator indicator = (CircleIndicator) findViewById(R.id.c_indicator);
+        indicator.setViewPager(mImageSwitcher);
+
+        mImageSwitcher.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
             @Override
-            public View makeView() {
+            public void onPageSelected(int position) {
+            }
 
-                ImageView imageView = new ImageView(MainActivity.this);
-                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            @Override
+            public void onPageScrolled(int position, float positionOffset,
+                                       int positionOffsetPixels) {
+            }
 
-                ImageSwitcher.LayoutParams params = new ImageSwitcher.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-
-                imageView.setLayoutParams(params);
-                return imageView;
+            @Override
+            public void onPageScrollStateChanged(int state) {
             }
         });
 
-        position = 0;
 
-
-
-        h = new Handler() {
-            public void handleMessage(android.os.Message msg) {
-                if (position == mImageIds.length - 1) {
+        h= new Handler();
+        runnable = new Runnable() {
+            public void run() {
+                if( position >= 4){
                     position = 0;
-                    mImageSwitcher.setImageResource(mImageIds[position]);
-                } else {
-                    mImageSwitcher.setImageResource(mImageIds[++position]);
+                }else{
+                    position = position+1;
                 }
+                mImageSwitcher.setCurrentItem(position, true);
+                h.postDelayed(runnable, 3000);
             }
         };
 
-
-        t = new Thread(new Runnable() {
-            public void run() {
-                while (true) {
-                    try {
-                        h.sendEmptyMessage(1);
-                        TimeUnit.SECONDS.sleep(3);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+        mImageSwitcher.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                if (h!= null) {
+                    h.removeCallbacks(runnable);
                 }
+                return false;
             }
         });
-        t.start();
 
 
     }
 
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (h!= null) {
+            h.removeCallbacks(runnable);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+        h.postDelayed(runnable, 3000);
+    }
 
     @Override
     protected void onDestroy() {
@@ -138,7 +182,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String uriString = uriBegin + "?q=" + encodedQuery + "&z=16";
                 Uri uri = Uri.parse(uriString);
                 Intent geoIntent = new Intent(android.content.Intent.ACTION_VIEW, uri);
-                startActivity(geoIntent);
+                try {
+                    startActivity(geoIntent);
+                }catch (ActivityNotFoundException e) {
+                      Toast.makeText(this,
+                    "Карты не установлены",
+                    Toast.LENGTH_SHORT).show();
+                }
+
 
                 break;
             case R.id.calendar_ll:
@@ -154,7 +205,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         .putExtra(CalendarContract.Events.DESCRIPTION, "Конференция")
                         .putExtra(CalendarContract.Events.EVENT_LOCATION, getResources().getString(R.string.geo))
                         .putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY);
-                startActivity(calendarIntent);
+                try {
+                    startActivity(calendarIntent);
+                }catch (ActivityNotFoundException e) {
+                    Toast.makeText(this,
+                            "Календарь не установлен",
+                            Toast.LENGTH_SHORT).show();
+                }
 
                 break;
 

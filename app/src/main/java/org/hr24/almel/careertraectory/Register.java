@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.view.KeyEvent;
 import android.webkit.WebView;
 
+import org.hr24.almel.careertraectory.utils.SimpleWebViewClientImpl;
+
 public class Register extends AppCompatActivity {
 
     WebView webView;

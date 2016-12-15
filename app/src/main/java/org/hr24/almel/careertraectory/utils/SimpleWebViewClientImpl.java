@@ -1,4 +1,4 @@
-package org.hr24.almel.careertraectory;
+package org.hr24.almel.careertraectory.utils;
 
 import android.app.Activity;
 import android.content.Intent;
